@@ -125,18 +125,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 loadQuestion();
-
-                String text = questionText.getText().toString() + answerText.getText().toString();
-                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-
-                //http://stackoverflow.com/a/29777304
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    ttsGreater21(text);
-                } else {
-                    ttsUnder20(text);
-                }
-
-
+                speakText();
             }
         });
 
@@ -146,19 +135,42 @@ public class MainActivity extends Activity {
                 String buttonName = buttonA.getText().toString();
                 if(buttonName.compareTo("Answer") == 0) {
                     String text = answerText.getText().toString();
-                    answerText.setText(text + "\r\n\r\n" + buffAnswer);
+                    answerText.setText(text + "\n\n" + buffAnswer);
 
                     buttonA.setText("Save");
                 }
                 else {
                     saveAnswer();
+                    speakText();
                 }
-
-
             }
         });
     }
+    public void speakText() {
+        String question = questionText.getText().toString();
+        String answer =  answerText.getText().toString();
+        //Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+        String[] lines = answer.split("\r\n|\r|\n");
+        String text = "";
 
+        for(int i = 0; i < lines.length; i++) {
+            text = text + lines[i];
+            if(i >= 10)
+                break;
+        }
+        text = question +",answer,\n"+ text;
+
+        text = text.replaceAll("\\*","");
+        text = text.replaceAll("\\+","");
+        text = text.replaceAll("-","");
+
+        //http://stackoverflow.com/a/29777304
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ttsGreater21(text);
+        } else {
+            ttsUnder20(text);
+        }
+    }
     public void loadQuestion() {
         randomNumber = mRand.nextInt(fileList.length);
         File file = new File(baseDir,fileList[randomNumber].getName()) ;
@@ -181,11 +193,12 @@ public class MainActivity extends Activity {
                     continue;
                 }
                 if(bAnswer == 0)
-                    buffQuestion = buffQuestion + str + "\r\n";
+                    buffQuestion = buffQuestion + str + "\n";
                 else
-                    buffAnswer = buffAnswer + str + "\r\n";
+                    buffAnswer = buffAnswer + str + "\n";
             }
             questionText.setText(buffQuestion);
+            answerText.setText("");
 
             fr.close() ;
         } catch (Exception e) {
@@ -208,8 +221,8 @@ public class MainActivity extends Activity {
             fw = new FileWriter(file) ;
 
             // write file.
-            fw.write(qText+"\r\n");
-            fw.write("<<ANSWER>>\r\n");
+            fw.write(qText+"\n");
+            fw.write("<<ANSWER>>\n");
             fw.write(aText);
         } catch (Exception e) {
             e.printStackTrace() ;
