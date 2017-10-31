@@ -11,6 +11,8 @@ import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 
 import android.widget.Button;
@@ -121,10 +123,30 @@ public class MainActivity extends Activity {
             }
         });
 
+        /*
+        // double tap event
+        final GestureDetector gestureDetector = new GestureDetector(this,new GestureDetector.SimpleOnGestureListener() {
+            public boolean onDoubleTap(MotionEvent e) {
+                speakText();
+                //Log.e("", "Open new activty here");
+                return true;
+            }
+        });
+        answerText.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
+*/
         buttonQ.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadQuestion();
+                CharSequence enteredText = answerText.getText().toString();
+                CharSequence cursorToEnd = enteredText.subSequence( answerText.getSelectionStart(),  answerText.getSelectionEnd());
+                if(cursorToEnd.length() < 1) {
+                    loadQuestion();
+                }
+
                 speakText();
             }
         });
@@ -153,16 +175,29 @@ public class MainActivity extends Activity {
         String[] lines = answer.split("\r\n|\r|\n");
         String text = "";
 
-        for(int i = 0; i < lines.length; i++) {
-            text = text + lines[i];
-            if(i >= 10)
-                break;
-        }
-        text = question +",answer,\n"+ text;
+        CharSequence enteredText = answerText.getText().toString();
+        CharSequence cursorToEnd = enteredText.subSequence( answerText.getSelectionStart(),  answerText.getSelectionEnd());
 
-        text = text.replaceAll("\\*","");
-        text = text.replaceAll("\\+","");
-        text = text.replaceAll("-","");
+        if(cursorToEnd.length() > 1) {
+            text = cursorToEnd.toString();
+        }
+        else {
+            for (int i = 0; i < lines.length; i++) {
+                text = text + lines[i];
+                if (i >= 10)
+                    break;
+            }
+            text = question + ",answer,\n" + text;
+
+            text = text.replaceAll("\\*", "");
+            text = text.replaceAll("\\+", "");
+            text = text.replaceAll("-", "");
+
+        }
+
+        String repeat = text;
+        for(int i=0; i<3; i++)   // 5번
+            text = text + "," + repeat;
 
         //http://stackoverflow.com/a/29777304
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
